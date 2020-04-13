@@ -3,8 +3,8 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from .serializer import RegistrationSerializer, LoginSerializer, ResetPasswordSerializer
-from django.contrib.auth.models import User
-from django.http import HttpResponse
+from django.contrib.auth.models import User, auth 
+from django.http import HttpResponse, response
 from .token import token_activation
 from django.contrib.sites.shortcuts import get_current_site
 from django_short_url.models import ShortURL
@@ -15,6 +15,20 @@ from project.settings import EMAIL_HOST_USER
 from django.core.mail import EmailMultiAlternatives
 from django.core.mail import EmailMessage
 from project.settings import SECRET_KEY
+from django.contrib.auth import authenticate
+from django.contrib import messages
+from django.core.validators import validate_email
+import jwt
+from django.core.cache import cache
+from project import settings
+from django.core.cache.backends.base import DEFAULT_TIMEOUT
+from rest_framework.response import Response
+
+CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
+
+
+def fundoo(request):
+    return render(request, 'base.html')
 
 class Registrations(GenericAPIView):
 
@@ -36,26 +50,22 @@ class Registrations(GenericAPIView):
             user.save()
             print('user created')
             token = token_activation(username, password)
-            print('token', token)
             current_site = get_current_site(request)
-            print(current_site)
             domain = current_site.domain
-            print('domain', domain)
             url = str(token)
-            print('url', url)
             surl = get_surl(url)
-            print('surl', surl)
             z = surl.split("/")
             mail_subject = "Click the link below to activate your account"
-            message = render_to_string('emailvalidation.html', {
+            message = render_to_string('emailverification.html', {
                 'user' : User.username,
                 'doamin' : domain,
                 'surl' : z[2]
             })
-            print(message) 
+
             rep = email
             email = EmailMessage(mail_subject, message, to=[rep])
             email.send()
+            print('message')
             return HttpResponse('confirmation mail sent!!! Please confirm your email address to complete the registration')
             messages.success(request, 'Your Account has been successfully Activated!!!')
 
@@ -85,83 +95,74 @@ def activate(request,surl):
         messages.info(request, 'was not able to sent the email')
         return redirect("/registration/")
 
-class login(GenericAPIView):
-  
+class Login(GenericAPIView):
+    
     serializer_class = LoginSerializer
-    def get(self, request):
-        return render(request, 'index.html')
+
+    def get(self,request):
+        return render(request, 'login.html')
 
     def post(self,request):
-       
-        username = request.POST['username']
-        password = request.POST['password']
+        data =request.data 
+        username = data.get('username')
+        password = data.get('password')
         user = auth.authenticate(username=username, password=password)
+        token = token_activation(username, password)
         
         if user is not None:
             if user.is_active:
                 auth.login(request, user)
-                return redirect("/")
+                print("Sucessfully Loged in")
+                cache.set(user.username,token)
+                print(cache.get(user.username,token))
+                return Response({'message':'token sent',"token":token}) 
             else:
                 return HttpResponse("Your account was inactive.")
         else:
-            messages.error(request, 'Invalid Username or Password')
             print("Invalid Credentials")
-        return redirect("/login/")
+        return redirect("/")
 
-class ForgotPassword(GenericAPIView):
+class Forgotpassword(GenericAPIView):
+
     serializer_class = ResetPasswordSerializer
-    
+
     def get(self,request):
-        return render(request,'forgot_password.html')
+        return render(request, 'forgot_password.html')
 
     def post(self,request):
         email = request.data['email']
         validate_email(email)
 
         try:
-            user = User.objects.filter(email=email)
+            user = User.objects.filter(email = email)
             useremail = user.values()[0]['email']
-            username = user.values()[0]["username"]
-            id = user.values()[0]["id"]
+            username = user.values()[0]['username']
+            id = user.values()[0]['id'] 
 
-            if useremail is not None:
-                token = token_activation(username,id)
-
+            print('useremail', useremail)
+            if user is not None:
+                
+                token = token_activation(username, id)
                 url = str(token)
                 surl = get_surl(url)
                 slug_url = surl.split('/')
-                mail_subject = "reset your account password by clicking below link"
+
+                mail_subject = "Click the link below to reset your account password"
                 mail_message = render_to_string('resetpassword.html', {
                     'user': username,
                     'domain': get_current_site(request).domain,
                     'surl': slug_url[2]
                 })
-                print(mail_message)
+                print('mail message',mail_message)
+
                 recipientemail = useremail
                 email = EmailMessage(mail_subject, mail_message, to=[recipientemail])
                 email.send()
                 return HttpResponse('confirmation mail sent!!!Click on the link to change password')
-                #return redirect("/login/")
+       
         except TypeError:
-            print("User dosent exists")
-            messages.info(request, 'was not able to sent the email')
-
-
-def resetpassword(request, surl):
-    
-    try:
-        tokenobject = ShortURL.objects.get(surl=surl)
-        token = tokenobject.lurl
-        decode = jwt.decode(token, SECRET_KEY)
-        username = decode['username']
-        user = User.objects.get(username=username)
-
-        if user is not None:
-            return redirect('/newpassword/' + str(user))
-        else:
-            return redirect('/forgot_password/')
-    except KeyError:
-        return HttpResponse("Key Error")
+            print("User dosent exist")
+        return HttpResponse("Enter correct email id")
 
 def resetpassword(request, surl):
     
@@ -180,20 +181,27 @@ def resetpassword(request, surl):
         return HttpResponse("Key Error")
 
 class newpassword(GenericAPIView):
-    
-    serializer_class = ResetPasswordSerializer
 
+    serializer_class = ResetPasswordSerializer
+    
+    def get(self,request,user_reset):
+        return render(request,'newpassword.html')
+    
     def post(self,request,user_reset):
-        password = request.POST.get('password')
+        data=request.data 
+
+        password = data.get('password')
         try:
             user = User.objects.get(username=user_reset)
             user.set_password(password)
             user.save()
+            messages.info(request, 'Password Updated Successfully')
             return redirect('/login/')
-
         except KeyError:
             return HttpResponse("Key Error")
 
+
+        
 
 
 
