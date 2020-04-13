@@ -25,7 +25,7 @@ SECRET_KEY = 'jxjxgjn=1@359la84=v)cvsld+h4dhra8ew%(!j-*$sdr4@cg7'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -55,6 +55,20 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'project.urls'
 
+BASE_URL = 'http://127.0.0.1:8000'
+
+CACHE_TTL = 60 * 25
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient"
+        },
+        "KEY_PREFIX": "example"
+    }
+}
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -76,8 +90,8 @@ WSGI_APPLICATION = 'project.wsgi.application'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'anupriyam2105@gmail.com'
-EMAIL_HOST_PASSWORD = 'anupriya11'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = 587
 
 
