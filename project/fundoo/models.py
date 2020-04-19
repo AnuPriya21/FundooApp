@@ -11,3 +11,7 @@ class Registration(models.Model):
     
     def __str__(self):
         return self.id
+
+class Upload(models.Model):
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    file = models.FileField()
