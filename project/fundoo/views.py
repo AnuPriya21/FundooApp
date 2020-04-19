@@ -23,6 +23,9 @@ from django.core.cache import cache
 from project import settings
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from rest_framework.response import Response
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
+from .models import Upload
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
@@ -116,6 +119,7 @@ class Login(GenericAPIView):
                 cache.set(user.username,token)
                 print(cache.get(user.username,token))
                 return Response({'message':'token sent',"token":token}) 
+                return redirect("/")
             else:
                 return HttpResponse("Your account was inactive.")
         else:
@@ -199,6 +203,22 @@ class newpassword(GenericAPIView):
             return redirect('/login/')
         except KeyError:
             return HttpResponse("Key Error")
+
+def image_upload(request):
+    if request.method == 'POST':
+        image_file = request.FILES['image_file']
+        #if settings.USE_S3:
+        upload = Upload(file=image_file)
+        upload.save()
+        image_url = upload.file.url
+        # else:
+        #     fs = FileSystemStorage()
+        #     filename = fs.save(image_file.name, image_file)
+        #     image_url = fs.url(filename)
+        return render(request, 'upload.html', {
+            'image_url': image_url
+        })
+    return render(request, 'upload.html')
 
 
         
