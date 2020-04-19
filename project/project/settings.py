@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_short_url',
     'rest_framework_jwt',
+    'storages'
 ]
 
 MIDDLEWARE = [
@@ -146,3 +147,22 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR,'static')
 ]
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT =  os.path.join(BASE_DIR, 'media') 
+
+AWS_ACCESS_KEY_ID = 'AKIAU6A2G6J3WNMWLZPZ'
+AWS_SECRET_ACCESS_KEY = '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'
+AWS_STORAGE_BUCKET_NAME = 'django-new'
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+AWS_LOCATION = 'static'
+
+STATIC_URL = 'https://%s/%s/' % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
+
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
