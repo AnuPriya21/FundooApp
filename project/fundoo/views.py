@@ -27,12 +27,17 @@ from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from .models import Upload
 
+
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
-
-def fundoo(request):
+def home(request):
     return render(request, 'base.html')
 
+def fundoo(request):
+    context = {}
+    context['user'] = request.user
+    return render(request, 'fundoo.html')
+ 
 class Registrations(GenericAPIView):
 
     serializer_class = RegistrationSerializer
@@ -49,8 +54,8 @@ class Registrations(GenericAPIView):
         password1 =  request.POST.get('password1')
 
         if password == password1:
-            user = User.objects.create_user(username = username, email = email, password = password)
-            user.save()
+            user_create = User.objects.create_user(username = username, email = email, password = password)
+            user_create.save()
             print('user created')
             token = token_activation(username, password)
             current_site = get_current_site(request)
@@ -64,11 +69,10 @@ class Registrations(GenericAPIView):
                 'doamin' : domain,
                 'surl' : z[2]
             })
-
+            print(message)
             rep = email
             email = EmailMessage(mail_subject, message, to=[rep])
             email.send()
-            print('message')
             return HttpResponse('confirmation mail sent!!! Please confirm your email address to complete the registration')
             messages.success(request, 'Your Account has been successfully Activated!!!')
 
@@ -119,12 +123,16 @@ class Login(GenericAPIView):
                 cache.set(user.username,token)
                 print(cache.get(user.username,token))
                 return Response({'message':'token sent',"token":token}) 
-                return redirect("/")
+                #return redirect("/fundoo/")
             else:
                 return HttpResponse("Your account was inactive.")
         else:
             print("Invalid Credentials")
         return redirect("/")
+    
+def logout(request):
+    auth.logout(request)
+    return redirect("/login/")
 
 class Forgotpassword(GenericAPIView):
 
@@ -204,8 +212,11 @@ class newpassword(GenericAPIView):
         except KeyError:
             return HttpResponse("Key Error")
 
+
 def image_upload(request):
+
     if request.method == 'POST':
+
         image_file = request.FILES['image_file']
         #if settings.USE_S3:
         upload = Upload(file=image_file)
@@ -219,11 +230,4 @@ def image_upload(request):
             'image_url': image_url
         })
     return render(request, 'upload.html')
-
-
-        
-
-
-
-
 
