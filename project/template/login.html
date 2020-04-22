@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,11 +22,18 @@
                     <div class="register">
                         <h1>Login</h1>
                         <div class="reg">
-                            <form action=""  method="POST"  name="regform" id="reg_form_id">
+                            <form action=""  method="POST"  name="loginform" id="login_form_id">
                                 {% csrf_token %}
                                 <input id="username" type="text" name="username" placeholder="Username" required> <br><br>
                                 <input id="password" type="password" name="password" placeholder="Password" required> <br><br>
                                 <button class="apireq" placeholder="Login" value="btn" id="button" >Login</button>
+
+                                <p>--OR--</p><br>
+                                <a href="{% url 'social:begin' 'github' %}">Login with GitHub</a><br>
+                                <br>
+                                <a href="{% url 'social:begin' 'google-oauth2' %}">Login with Google</a><br>
+                                <br>
+                                <a href="{% url 'social:begin' 'linkedin-oauth2' %}">Login with Linkedin</a><br>
                             </form>
                         </div>
                     </div>
