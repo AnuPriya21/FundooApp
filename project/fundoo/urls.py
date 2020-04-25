@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import fundoo, Registrations, activate, Login, Forgotpassword, resetpassword, newpassword, image_upload
+from .views import home, fundoo, Registrations, activate, Login, logout,Forgotpassword, resetpassword, newpassword, image_upload, Createnote
 from rest_framework_jwt.views import obtain_jwt_token
 
 
@@ -8,13 +8,17 @@ urlpatterns = [
     path('api-token-auth/', obtain_jwt_token), 
     path('api/token/', obtain_jwt_token),
 
-    path('', fundoo, name = 'base'),
+    path('fundoo/', fundoo, name='fundoo'),
+    path('', home, name = 'home'),
     path('registration/', Registrations.as_view(),  name = 'registration'),
     path('activate/<slug:surl>/',activate, name='activate'),
     path('login/',Login.as_view(), name = 'login'),
+    path('logout/', logout, name = 'logout'),
 
     path('forgotpassword/', Forgotpassword.as_view(), name = 'forgotpassword'),
     path('resetpassword/<slug:surl>', resetpassword, name='resetpassword'),
     path('newpassword/<user_reset>', newpassword.as_view(), name='newpassword'),
-    path('upload/', image_upload, name = 'image_upload')
-]
+    path('upload/', image_upload, name = 'image_upload'),
+
+    path('createnote/', Createnote.as_view(), name = 'createnote'),
+] 
