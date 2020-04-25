@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
-from .serializer import RegistrationSerializer, LoginSerializer, ResetPasswordSerializer
+from .serializer import RegistrationSerializer, LoginSerializer, ResetPasswordSerializer, NoteSerializer
 from django.contrib.auth.models import User, auth 
 from django.http import HttpResponse, response
 from .token import token_activation
@@ -25,7 +25,7 @@ from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from rest_framework.response import Response
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
-from .models import Upload
+from .models import Upload, Notes
 
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
@@ -54,8 +54,8 @@ class Registrations(GenericAPIView):
         password1 =  request.POST.get('password1')
 
         if password == password1:
-            user_create = User.objects.create_user(username = username, email = email, password = password)
-            user_create.save()
+            user = User.objects.create_user(username = username, email = email, password = password)
+            user.save()
             print('user created')
             token = token_activation(username, password)
             current_site = get_current_site(request)
@@ -218,16 +218,34 @@ def image_upload(request):
     if request.method == 'POST':
 
         image_file = request.FILES['image_file']
-        #if settings.USE_S3:
         upload = Upload(file=image_file)
         upload.save()
         image_url = upload.file.url
-        # else:
-        #     fs = FileSystemStorage()
-        #     filename = fs.save(image_file.name, image_file)
-        #     image_url = fs.url(filename)
+
         return render(request, 'upload.html', {
             'image_url': image_url
         })
+
     return render(request, 'upload.html')
 
+class Createnote(GenericAPIView):
+    serializer_class = NoteSerializer
+    queryset = Notes.objects.all().filter(archive=False,trash=False)
+
+    def get(self, request):
+        user = request.user.username
+        notes = Notes.objects.filter(archive=False,trash=False)
+        print(notes)
+        return Response(notes.values())
+
+    def post(self, request):
+        serializer = NoteSerializer(data=request.data)
+        print(request.data['title'])
+
+        if serializer.is_valid():
+            print("valid")
+            user = request.user.username
+            print(user)
+            serializer.save(user_id=user.id)
+            return Response()
+        return Response("Enter some notes")
