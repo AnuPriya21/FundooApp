@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Registration, Profile
+from .models import Registration, Notes
 
 class RegistrationSerializer(serializers.ModelSerializer):
 
@@ -32,8 +32,9 @@ class ResetPasswordSerializer(serializers.ModelSerializer):
         model = User
         fields = ['password']
     
+class NoteSerializer(serializers.ModelSerializer):
 
-class ProfilePicSerializer(serializers.ModelSerializer):
+    
     class Meta:
-        model = Profile
-        fields = ['image']
+        model = Notes
+        fields = ['id','title','text','archive','trash']
