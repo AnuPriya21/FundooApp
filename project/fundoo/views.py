@@ -25,7 +25,7 @@ from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from rest_framework.response import Response
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
-from .models import Upload, Notes
+from .models import Upload, Note
 
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
@@ -230,11 +230,11 @@ def image_upload(request):
 
 class Createnote(GenericAPIView):
     serializer_class = NoteSerializer
-    queryset = Notes.objects.all().filter(archive=False,trash=False)
+    queryset = Note.objects.all()
 
     def get(self, request):
-        user = request.user.username
-        notes = Notes.objects.filter(archive=False,trash=False)
+        user = request.user.id
+        notes = Note.objects.filter(archive=False,trash=False)
         print(notes)
         return Response(notes.values())
 
@@ -244,8 +244,9 @@ class Createnote(GenericAPIView):
 
         if serializer.is_valid():
             print("valid")
-            user = request.user.username
+            user = request.user.id
             print(user)
-            serializer.save(user_id=user.id)
-            return Response()
+            serializer.save(user_id=user)
+            return Response('note is saved')
         return Response("Enter some notes")
+
