@@ -299,3 +299,26 @@ class Createlabel(GenericAPIView):
             return Response("Label Created")
         return Response("Enter Label")
 
+class Updatelabel(GenericAPIView):
+        serializer_class = LabelSerializer
+        queryset = Label.objects.all()
+
+        def put(self,request,id,*args,**kwargs):
+            user = request.user.id
+            serializer = LabelSerializer(data = request.data)
+
+            if serializer.is_valid():
+                label = self.queryset.get(pk=id,user_id = user)
+                serializer.update(label, request.data)
+                return Response("Label Updated")
+
+        def delete(self, request,id):
+            user = request.user.id
+            label = self.queryset.get(pk=id,user_id = user)
+
+            if label is not None:
+                label.delete()
+                return Response("label deleted")
+            
+            else:
+                return Response("Label not deleted")
