@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Registration, Notes
+from .models import Registration, Note, Label
 
 class RegistrationSerializer(serializers.ModelSerializer):
 
@@ -33,8 +33,19 @@ class ResetPasswordSerializer(serializers.ModelSerializer):
         fields = ['password']
     
 class NoteSerializer(serializers.ModelSerializer):
-
     
     class Meta:
-        model = Notes
+        model = Note
         fields = ['id','title','text','archive','trash']
+
+class DisplaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Note
+        fields = '__all__'
+        read_only_fields = ['id']
+
+class LabelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Label
+        fields = ['label']
+
