@@ -22,4 +22,7 @@ urlpatterns = [
 
     path('createnote/', Createnote.as_view(), name = 'createnote'),
     path('updatenote/<int:id>', Updatenote.as_view(), name = 'updatenote'),
+    path('createlabel/', Createlabel.as_view(), name = 'createlabel'),
+    path('updatelabel/<int:id>', Updatelabel.as_view() ,name="labelupdate"),
+
 ] 
