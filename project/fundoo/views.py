@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
-from .serializer import RegistrationSerializer, LoginSerializer, ResetPasswordSerializer, NoteSerializer, DisplaySerializer
+from .serializer import RegistrationSerializer, LoginSerializer, ResetPasswordSerializer, NoteSerializer, DisplaySerializer, LabelSerializer
 from django.contrib.auth.models import User, auth 
 from django.http import HttpResponse, response
 from .token import token_activation
@@ -25,7 +25,7 @@ from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from rest_framework.response import Response
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
-from .models import Upload, Note
+from .models import Upload, Note, Label
 
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
@@ -252,27 +252,50 @@ class Createnote(GenericAPIView):
 
 class Updatenote(GenericAPIView):
     serializer_class = DisplaySerializer
-    queryset = Note.objects.all().filter()
+    queryset = Note.objects.all()
 
-    def get(self,request,pk):
-        pk = request.user.id
-        notes = Note.objects.get(user_id = pk)
-        serializer_class = DisplaySerializer(notes)
-
+    def get(self,request,id):
+        user = request.user.id
+        notes = Note.objects.get(pk=id, user_id = user)
+        serializer_class = NoteSerializer(notes)
         return Response(reversed(serializer_class.data))
 
-    def put(self,request,pk):
-        
-        pk = request.user.id
-        notes = Note.objects.get(user_id = pk)
-        serializer = NoteSerializer(notes,data=request.data)
-        print(request.data)
+    def put(self,request,id):
+        user = request.user.id
+        serializer = NoteSerializer(data = request.data)
 
         if serializer.is_valid():
-            serializer.save(user_id = user)
-            return Response("Note Updated Successfully")
+            notes = self.queryset.get(pk=id,user_id = user)
+            serializer.update(notes, request.data)
+            return Response("Note Updated")
+        
+    def delete(self, request,id):
+        user = request.user.id
+        notes = self.queryset.get(pk=id,user_id = user)
 
-        return Response("Oops Something went wrong")
+        if notes is not None:
+            notes.delete()
+            return Response("Note deleted")
+        else:
+            return Response("Note does not deleted")
 
+class Createlabel(GenericAPIView):
 
+    serializer_class = LabelSerializer
+    queryset = Label.objects.all()
+
+    def get(self,request,*args, **kwargs):
+
+        user = request.user.id
+        label = self.queryset.filter(user_id = user)
+        return Response(label.values())
+
+    def post(self,request):
+        serializer = LabelSerializer(data=request.data)
+
+        if serializer.is_valid():
+            user = request.user.id
+            serializer.save(user_id =user)
+            return Response("Label Created")
+        return Response("Enter Label")
 
