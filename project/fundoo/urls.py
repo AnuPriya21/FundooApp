@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import home, fundoo, Registrations, activate, Login, logout,Forgotpassword, resetpassword, newpassword, image_upload, Createnote
+from .views import home, fundoo, Registrations, activate, Login, logout,Forgotpassword, resetpassword, newpassword, image_upload, Createnote, Updatenote, Createlabel, Updatelabel
 from rest_framework_jwt.views import obtain_jwt_token
 
 
@@ -21,4 +21,5 @@ urlpatterns = [
     path('upload/', image_upload, name = 'image_upload'),
 
     path('createnote/', Createnote.as_view(), name = 'createnote'),
+    path('updatenote/<int:id>', Updatenote.as_view(), name = 'updatenote'),
 ] 
