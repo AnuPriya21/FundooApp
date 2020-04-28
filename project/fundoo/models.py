@@ -20,10 +20,21 @@ class Upload(models.Model):
     def __str__(self):
         return self.file
 
-class Notes(models.Model):
+class Note(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=50)
-    text = models.TextField(max_length=200)
-    
-    def __str__(Self):
-        return self.title
+    title = models.CharField(max_length=20)
+    text = models.TextField()
+    archive = models.BooleanField(default=False)
+    trash = models.BooleanField(default=False)
+    note_label = models.ManyToManyField('Label', blank=True)
+
+
+    def __str__(self):
+        return str(self.title)
+        
+class Label(models.Model):
+    user = models.ForeignKey(User, related_name='Label', on_delete=models.CASCADE)
+    label = models.CharField(max_length=50, blank=True)
+
+    def __str__(self):  
+        return str(self.label)
