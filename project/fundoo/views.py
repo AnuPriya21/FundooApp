@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
-from .serializer import RegistrationSerializer, LoginSerializer, ResetPasswordSerializer, NoteSerializer
+from .serializer import RegistrationSerializer, LoginSerializer, ResetPasswordSerializer, NoteSerializer, DisplaySerializer
 from django.contrib.auth.models import User, auth 
 from django.http import HttpResponse, response
 from .token import token_activation
@@ -249,4 +249,30 @@ class Createnote(GenericAPIView):
             serializer.save(user_id=user)
             return Response('note is saved')
         return Response("Enter some notes")
+
+class Updatenote(GenericAPIView):
+    serializer_class = DisplaySerializer
+    queryset = Note.objects.all().filter()
+
+    def get(self,request,pk):
+        pk = request.user.id
+        notes = Note.objects.get(user_id = pk)
+        serializer_class = DisplaySerializer(notes)
+
+        return Response(reversed(serializer_class.data))
+
+    def put(self,request,pk):
+        
+        pk = request.user.id
+        notes = Note.objects.get(user_id = pk)
+        serializer = NoteSerializer(notes,data=request.data)
+        print(request.data)
+
+        if serializer.is_valid():
+            serializer.save(user_id = user)
+            return Response("Note Updated Successfully")
+
+        return Response("Oops Something went wrong")
+
+
 
