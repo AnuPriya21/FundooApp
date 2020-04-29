@@ -49,3 +49,8 @@ class LabelSerializer(serializers.ModelSerializer):
         model = Label
         fields = ['label']
 
+class RestoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Note
+        fields = ['trash']
+
