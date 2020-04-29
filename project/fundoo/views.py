@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
-from .serializer import RegistrationSerializer, LoginSerializer, ResetPasswordSerializer, NoteSerializer, DisplaySerializer, LabelSerializer
+from .serializer import RegistrationSerializer, LoginSerializer, ResetPasswordSerializer, NoteSerializer, DisplaySerializer, LabelSerializer, RestoreSerializer
 from django.contrib.auth.models import User, auth 
 from django.http import HttpResponse, response
 from .token import token_activation
@@ -331,10 +331,20 @@ class Archive(GenericAPIView):
     queryset = Note.objects.all()
 
     def get(self,request):
-        try:
-            user = request.user.id
-            notes = Note.objects.filter(archive = True, user_id = user)
-            serializer = DisplaySerializer(notes, many = True)
-            return Response(serializer.data)
-        except:
-            return Response("Note note")
+        user = request.user.id
+        notes = Note.objects.filter(archive = True, user_id = user)
+        serializer = DisplaySerializer(notes, many = True)
+        return Response(serializer.data)
+
+class Trash(GenericAPIView):
+    serializer_class = RestoreSerializer
+    queryset = Note.objects.all()
+
+    def get(self,request):
+        user = request.user.id
+        notes = Note.objects.filter(trash = True, user_id = user)
+        serializer = DisplaySerializer(notes, many = True)
+        return Response(serializer.data)
+       
+
+        
