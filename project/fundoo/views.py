@@ -241,14 +241,16 @@ class Createnote(GenericAPIView):
     def post(self, request):
         serializer = NoteSerializer(data=request.data)
         print(request.data['title'])
-
-        if serializer.is_valid():
-            print("valid")
-            user = request.user.id
-            print(user)
-            serializer.save(user_id=user)
-            return Response('note is saved')
-        return Response("Enter some notes")
+        try:
+            if serializer.is_valid():
+                print("valid")
+                user = request.user.id
+                print(user)
+                serializer.save(user_id=user)
+                return Response('note is saved')
+            return Response("Enter some notes")
+        except:
+            return HttpResponse("Please login to create notes")
 
 class Updatenote(GenericAPIView):
     serializer_class = DisplaySerializer
@@ -258,17 +260,18 @@ class Updatenote(GenericAPIView):
         user = request.user.id
         notes = Note.objects.get(pk=id, user_id = user)
         serializer_class = NoteSerializer(notes)
-        return Response(reversed(serializer_class.data))
+        return Response(serializer_class.data)
 
     def put(self,request,id):
         user = request.user.id
         serializer = NoteSerializer(data = request.data)
 
         if serializer.is_valid():
-            notes = self.queryset.get(pk=id,user_id = user)
+            notes = User.objects.get(pk=id, user_id = user)
             serializer.update(notes, request.data)
             return Response("Note Updated")
-        
+        return Response("Note Not Updated")
+
     def delete(self, request,id):
         user = request.user.id
         notes = self.queryset.get(pk=id,user_id = user)
@@ -322,3 +325,16 @@ class Updatelabel(GenericAPIView):
             
             else:
                 return Response("Label not deleted")
+
+class Archive(GenericAPIView):
+    serializer_class = DisplaySerializer
+    queryset = Note.objects.all()
+
+    def get(self,request):
+        try:
+            user = request.user.id
+            notes = Note.objects.filter(archive = True, user_id = user)
+            serializer = DisplaySerializer(notes, many = True)
+            return Response(serializer.data)
+        except:
+            return Response("Note note")
