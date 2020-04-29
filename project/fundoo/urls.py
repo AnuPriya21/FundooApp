@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import home, fundoo, Registrations, activate, Login, logout,Forgotpassword, resetpassword, newpassword, image_upload, Createnote, Updatenote, Createlabel, Updatelabel, Archive
+from .views import home, fundoo, Registrations, activate, Login, logout,Forgotpassword, resetpassword, newpassword, image_upload, Createnote, Updatenote, Createlabel, Updatelabel, Archive, Trash
 from rest_framework_jwt.views import obtain_jwt_token
 
 
@@ -25,4 +25,5 @@ urlpatterns = [
     path('createlabel/', Createlabel.as_view(), name = 'createlabel'),
     path('updatelabel/<int:id>', Updatelabel.as_view() ,name="labelupdate"),
     path('archive/', Archive.as_view(), name = 'archive'),
+    path('trash/', Trash.as_view(), name = 'trash'),
 ] 
